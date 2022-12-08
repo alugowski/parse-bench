@@ -15,6 +15,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 
 #include <cstdio>
 #include <charconv>
+#include <sstream>
 #include <omp.h>
 
 
@@ -53,7 +54,27 @@ std::vector<Chunk> getChunks(const std::string& block, const int chunkSize) {
 }
 
 /**
- * Parse a block using from_chars (fast_float version for floats), in parallel.
+ * Parse a block using io streams.
+ */
+void ParseChunk_istringstream(const char* pos, size_t length) {
+    int64_t row, col;
+    double value;
+
+    std::istringstream iss(std::string(pos, length));
+
+    while (!iss.eof()) {
+        iss >> row >> col >> value;
+
+        benchmark::DoNotOptimize(row);
+        benchmark::DoNotOptimize(col);
+        benchmark::DoNotOptimize(value);
+    }
+}
+
+/**
+ * Parse a block in parallel.
+ *
+ * First benchmark argument determines the block parse implementation.
  *
  * The model is that IO is done by a single thread, then the bytes are split into chunks and the chunks parsed in
  * parallel. The splitting is timed.
@@ -66,70 +87,78 @@ std::vector<Chunk> getChunks(const std::string& block, const int chunkSize) {
  * Exact line numbers are not required. If required, such as for good error messages, then the chunking process would
  * require a scan and a performance hit.
  */
-static void BlockParseParallel_from_chars_ff(benchmark::State& state) {
+static void BlockParseParallel_multi(benchmark::State& state) {
+    const int whichImpl = (int)state.range(0);
+    const int numThreads = (int)state.range(1);
+    const int chunkSize = (int)state.range(2);
+
     std::size_t num_bytes = 0;
-    const std::string kBigLineBlock = ConstructManyLines(400u << 20u);
-    omp_set_num_threads((int)state.range(0));
+    const std::string kBigLineBlock = ConstructManyLines(200u << 20u);
+    omp_set_num_threads(numThreads);
 
     for ([[maybe_unused]] auto _ : state) {
         // chunk the input
-        auto chunks = getChunks(kBigLineBlock, (int)state.range(1));
+        auto chunks = getChunks(kBigLineBlock, chunkSize);
 
         // process chunks in parallel
+        switch (whichImpl) {
+            case 0: // from_chars with fast_float
 #pragma omp parallel for default(none) shared(chunks)
-        for (auto chunk : chunks) {
-            ParseChunk_from_chars_ff(chunk.start, chunk.length);
+                for (auto chunk : chunks) {
+                    ParseChunk_from_chars_ff(chunk.start, chunk.length);
+                }
+                break;
+
+            case 1: // from_chars with strtod
+#pragma omp parallel for default(none) shared(chunks)
+                for (auto chunk : chunks) {
+                    ParseChunk_from_chars_strtod(chunk.start, chunk.length);
+                }
+                break;
+
+            case 2: // istringstream
+#pragma omp parallel for default(none) shared(chunks)
+                for (auto chunk : chunks) {
+                    ParseChunk_istringstream(chunk.start, chunk.length);
+                }
+                break;
+            default:
+                break;
         }
 
         num_bytes += kBigLineBlock.size();
     }
 
     state.SetBytesProcessed((int64_t)num_bytes);
-    state.counters["p"] = benchmark::Counter((double)state.range(0));
-    state.counters["chunk_size"] = benchmark::Counter((double)state.range(1), benchmark::Counter::kDefaults, benchmark::Counter::kIs1024);
+    state.counters["p"] = benchmark::Counter((double)numThreads);
+    state.counters["chunk_size"] = benchmark::Counter((double)chunkSize, benchmark::Counter::kDefaults, benchmark::Counter::kIs1024);
 }
 
-BENCHMARK(BlockParseParallel_from_chars_ff)
+BENCHMARK(BlockParseParallel_multi)
         ->Name("BlockParseParallel/from_chars(fast_float)")
         ->UseRealTime()
         ->ArgsProduct({
-            {1, 2, 3, 4, 5, 6, 7, 8}, // number of threads
-            {1u << 10u, 1u << 20u, 10u << 20u} // chunk sizes
-        });
+                              {0}, // from_chars(fast_float) version
+                              {1, 2, 3, 4, 5, 6, 7, 8}, // number of threads
+                              {1u << 10u, 1u << 20u, 10u << 20u} // chunk sizes
+                      });
 
-/**
- * Same as BlockParseParallel_from_chars_ff except using strtod instead of from_chars.
- *
- * The main takeaway here is that strtod has internal locking on some platforms that hurts parallel performance.
- */
-static void BlockParseParallel_from_chars_strtod(benchmark::State& state) {
-    std::size_t num_bytes = 0;
-    const std::string kBigLineBlock = ConstructManyLines(200u << 20u);
-    omp_set_num_threads((int)state.range(0));
 
-    for ([[maybe_unused]] auto _ : state) {
-        // chunk the input
-        auto chunks = getChunks(kBigLineBlock, (int)state.range(1));
-
-        // process chunks in parallel
-#pragma omp parallel for default(none) shared(chunks)
-        for (auto chunk : chunks) {
-            ParseChunk_from_chars_strtod(chunk.start, chunk.length);
-        }
-
-        num_bytes += kBigLineBlock.size();
-    }
-
-    state.SetBytesProcessed((int64_t)num_bytes);
-    state.counters["p"] = benchmark::Counter((double)state.range(0));
-    state.counters["chunk_size"] = benchmark::Counter((double)state.range(1), benchmark::Counter::kDefaults, benchmark::Counter::kIs1024);
-}
-BENCHMARK(BlockParseParallel_from_chars_strtod)
+BENCHMARK(BlockParseParallel_multi)
         ->Name("BlockParseParallel/from_chars+strtod")
         ->UseRealTime()
         ->ArgsProduct({
-            {1, 2, 3, 4, 5, 6, 7, 8}, // number of threads
-            {1u << 20u} // chunk sizes
-        });
+                              {1}, // from_chars+strtod version
+                              {1, 2, 3, 4, 5, 6, 7, 8}, // number of threads
+                              {1u << 20u} // chunk sizes
+                      });
 
+BENCHMARK(BlockParseParallel_multi)
+        ->Name("BlockParseParallel/istringstream")
+        ->UseRealTime()
+        ->ArgsProduct({
+                              {2}, // istringstream version
+                              {1, 2, 3, 4, 5, 6, 7, 8}, // number of threads
+                              {1u << 20u} // chunk sizes
+                      });
 #endif // ENABLE_OPENMP

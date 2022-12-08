@@ -36,7 +36,7 @@ const std::array<std::string, 3> kDoubleStrings = {
  *
  * @param byte_target size in bytes of the result
  */
-static std::string ConstructManyLines(std::size_t byte_target) {
+std::string ConstructManyLines(std::size_t byte_target) {
     std::vector<char> chunk;
     for (const auto& line : kLines) {
         std::copy(std::begin(line), std::end(line), std::back_inserter(chunk));

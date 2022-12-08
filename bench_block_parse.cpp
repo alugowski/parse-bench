@@ -51,54 +51,59 @@ static void BlockParse_istringstream(benchmark::State& state) {
 BENCHMARK(BlockParse_istringstream)->Name("BlockParse/istringstream");
 
 /**
- * Parse a block using from_chars and strtod
+ * Parse a single chunk using from_chars and strtod.
  */
-static void BlockParse_from_chars_strtod(benchmark::State& state) {
-    std::size_t num_bytes = 0;
+void ParseChunk_from_chars_strtod(const char* pos, size_t length) {
+    errno = 0;
 
     int64_t row, col;
     double value;
 
-    for ([[maybe_unused]] auto _ : state) {
-        errno = 0;
+    const char* end = pos + length;
 
-        const char* pos = kLineBlock.c_str();
-        const char* end = pos + kLineBlock.size();
+    while (pos != end && pos != nullptr) {
 
-        while (pos != end && pos != nullptr) {
-
-            std::from_chars_result row_result = std::from_chars(pos, end, row);
-            if (row_result.ec != std::errc()) {
-                break; // error testing
-            }
-
-            const char* col_start = row_result.ptr + std::strspn(row_result.ptr, " "); // skip separator
-
-            std::from_chars_result col_result = std::from_chars(col_start, end, col);
-            if (col_result.ec != std::errc()) {
-                break; // error testing
-            }
-
-            // strtod does its own leading whitespace skipping
-            char* value_end;
-            value = std::strtod(col_result.ptr, &value_end);
-            if (errno != 0) {
-                break; // error checking
-            }
-
-            // find the newline
-            pos = std::strchr(col_result.ptr, '\n');
-
-            // bump to start of next line
-            if (pos != end) {
-                pos++;
-            }
-
-            benchmark::DoNotOptimize(row);
-            benchmark::DoNotOptimize(col);
-            benchmark::DoNotOptimize(value);
+        std::from_chars_result row_result = std::from_chars(pos, end, row);
+        if (row_result.ec != std::errc()) {
+            break; // error testing
         }
 
+        const char* col_start = row_result.ptr + std::strspn(row_result.ptr, " "); // skip separator
+
+        std::from_chars_result col_result = std::from_chars(col_start, end, col);
+        if (col_result.ec != std::errc()) {
+            break; // error testing
+        }
+
+        // strtod does its own leading whitespace skipping
+        char* value_end;
+        value = std::strtod(col_result.ptr, &value_end);
+        if (errno != 0) {
+            break; // error checking
+        }
+
+        // find the newline
+        pos = std::strchr(col_result.ptr, '\n');
+
+        // bump to start of next line
+        if (pos != end) {
+            pos++;
+        }
+
+        benchmark::DoNotOptimize(row);
+        benchmark::DoNotOptimize(col);
+        benchmark::DoNotOptimize(value);
+    }
+}
+
+/**
+ * Benchmark parsing a block using from_chars and strtod
+ */
+static void BlockParse_from_chars_strtod(benchmark::State& state) {
+    std::size_t num_bytes = 0;
+
+    for ([[maybe_unused]] auto _ : state) {
+        ParseChunk_from_chars_strtod(kLineBlock.c_str(), kLineBlock.size());
         num_bytes += kLineBlock.size();
     }
 
@@ -110,52 +115,55 @@ BENCHMARK(BlockParse_from_chars_strtod)->Name("BlockParse/from_chars+strtod");
 /**
  * Parse a block using from_chars. Parse floats using the fast_float version of from_chars for compiler compatibility.
  */
-static void BlockParse_from_chars_ff(benchmark::State& state) {
-    std::size_t num_bytes = 0;
-
+void ParseChunk_from_chars_ff(const char* pos, size_t length) {
     int64_t row, col;
     double value;
 
-    for ([[maybe_unused]] auto _ : state) {
-        errno = 0;
+    const char* end = pos + length;
 
-        const char* pos = kLineBlock.c_str();
-        const char* end = pos + kLineBlock.size();
+    while (pos != end && pos != nullptr) {
 
-        while (pos != end && pos != nullptr) {
-
-            std::from_chars_result row_result = std::from_chars(pos, end, row);
-            if (row_result.ec != std::errc()) {
-                break; // error testing
-            }
-
-            const char* col_start = row_result.ptr + std::strspn(row_result.ptr, " "); // skip separator
-
-            std::from_chars_result col_result = std::from_chars(col_start, end, col);
-            if (col_result.ec != std::errc()) {
-                break; // error testing
-            }
-
-            const char* val_start = col_result.ptr + std::strspn(col_result.ptr, " "); // skip separator
-
-            fast_float::from_chars_result val_result = fast_float::from_chars(val_start, end, value, fast_float::chars_format::general);
-            if (val_result.ec != std::errc()) {
-                break; // error testing
-            }
-
-            // find the newline
-            pos = std::strchr(val_result.ptr, '\n');
-
-            // bump to start of next line
-            if (pos != end) {
-                pos++;
-            }
-
-            benchmark::DoNotOptimize(row);
-            benchmark::DoNotOptimize(col);
-            benchmark::DoNotOptimize(value);
+        std::from_chars_result row_result = std::from_chars(pos, end, row);
+        if (row_result.ec != std::errc()) {
+            break; // error testing
         }
 
+        const char* col_start = row_result.ptr + std::strspn(row_result.ptr, " "); // skip separator
+
+        std::from_chars_result col_result = std::from_chars(col_start, end, col);
+        if (col_result.ec != std::errc()) {
+            break; // error testing
+        }
+
+        const char* val_start = col_result.ptr + std::strspn(col_result.ptr, " "); // skip separator
+
+        fast_float::from_chars_result val_result = fast_float::from_chars(val_start, end, value, fast_float::chars_format::general);
+        if (val_result.ec != std::errc()) {
+            break; // error testing
+        }
+
+        // find the newline
+        pos = std::strchr(val_result.ptr, '\n');
+
+        // bump to start of next line
+        if (pos != end) {
+            pos++;
+        }
+
+        benchmark::DoNotOptimize(row);
+        benchmark::DoNotOptimize(col);
+        benchmark::DoNotOptimize(value);
+    }
+}
+
+/**
+ * Benchmark parsing a block using from_chars.
+ */
+static void BlockParse_from_chars_ff(benchmark::State& state) {
+    std::size_t num_bytes = 0;
+
+    for ([[maybe_unused]] auto _ : state) {
+        ParseChunk_from_chars_ff(kLineBlock.c_str(), kLineBlock.size());
         num_bytes += kLineBlock.size();
     }
 

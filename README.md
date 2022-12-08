@@ -34,3 +34,17 @@ The [plots](plots) directory contains a Jupyter notebook that can read the Googl
 * A fast approach includes using fast methods to identify fields then use fast field conversion methods to parse said fields.
 * The C++17 `std::from_chars` methods are great, though the float version still has [spotty compiler support](https://en.cppreference.com/w/cpp/compiler_support/17).
 * [fast_float](https://github.com/fastfloat/fast_float) is great if your compiler doesn't include a float version of `std::from_chars`.
+* Parallelism: an efficient parallel parser can reach >1 GB/s speeds on a laptop.
+* Parallelism: some single-threaded methods are either not thread safe or reduce performance (eg. `strtod`)
+
+## Parallelism
+
+CPU-bound operations have a natural path to speedup: parallelism. We include some parallel parsing here, with many simplifying (but realistic) assumptions to focus on speeding up parsing only.
+
+Some methods that are good options for single-threaded use are either not thread safe or include internal synchronization that kills multithreaded performance.
+For example, using `strtod` in parallel is *slower* than single threaded, at least on some platforms. The problem there appears to be locale support which requires locking. Some platforms like BSD and macOS include a `strtod_l` which can avoid this, but it is not portable.
+
+### macOS
+The version of clang bundled with macOS does not support OpenMP. Parallel benchmarks are disabled if OpenMP is not found.
+
+You can try to install OpenMP with `brew install libomp` and that is sometimes enough. If not, install LLVM or GCC and use that instead. For example, `brew install llvm` then follow the instructions to use that compiler for this project.

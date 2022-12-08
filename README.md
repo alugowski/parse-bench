@@ -24,8 +24,11 @@ The core result is bytes per second for each approach. That is the only figure s
 
 We use short and long fields to attempt to not cherry-pick easy or hard inputs. See [main.cpp](main.cpp) for what the input data looks like.
 
-The [plots](plots) directory contains a Jupyter notebook that can read the Google Benchmark output and plot the results.
+See [plots](plots/plot.ipynb) for a Jupyter notebook that reads the Google Benchmark output and plots relevant results. The provided results were run on an M1 Macbook Pro.
 
+![string to integer conversion](plots/string-to-integer.svg)
+![string to double conversion](plots/string-to-double.svg)
+![parallel parse scaling](plots/parallel-parse-scaling.svg)
 ## Takeaways
 
 * Datafile parse performance is CPU bound due to parsing, not IO bound. By a lot.

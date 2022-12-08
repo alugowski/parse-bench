@@ -18,6 +18,8 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 #include <charconv>
 #include <sstream>
 
+#include "fast_float/fast_float.h"
+
 /**
  * Parse a block using istringstream
  *
@@ -104,3 +106,60 @@ static void BlockParse_from_chars_strtod(benchmark::State& state) {
 }
 
 BENCHMARK(BlockParse_from_chars_strtod)->Name("BlockParse/from_chars+strtod");
+
+/**
+ * Parse a block using from_chars. Parse floats using the fast_float version of from_chars for compiler compatibility.
+ */
+static void BlockParse_from_chars_ff(benchmark::State& state) {
+    std::size_t num_bytes = 0;
+
+    int64_t row, col;
+    double value;
+
+    for ([[maybe_unused]] auto _ : state) {
+        errno = 0;
+
+        const char* pos = kLineBlock.c_str();
+        const char* end = pos + kLineBlock.size();
+
+        while (pos != end && pos != nullptr) {
+
+            std::from_chars_result row_result = std::from_chars(pos, end, row);
+            if (row_result.ec != std::errc()) {
+                break; // error testing
+            }
+
+            const char* col_start = row_result.ptr + std::strspn(row_result.ptr, " "); // skip separator
+
+            std::from_chars_result col_result = std::from_chars(col_start, end, col);
+            if (col_result.ec != std::errc()) {
+                break; // error testing
+            }
+
+            const char* val_start = col_result.ptr + std::strspn(col_result.ptr, " "); // skip separator
+
+            fast_float::from_chars_result val_result = fast_float::from_chars(val_start, end, value, fast_float::chars_format::general);
+            if (val_result.ec != std::errc()) {
+                break; // error testing
+            }
+
+            // find the newline
+            pos = std::strchr(val_result.ptr, '\n');
+
+            // bump to start of next line
+            if (pos != end) {
+                pos++;
+            }
+
+            benchmark::DoNotOptimize(row);
+            benchmark::DoNotOptimize(col);
+            benchmark::DoNotOptimize(value);
+        }
+
+        num_bytes += kLineBlock.size();
+    }
+
+    state.SetBytesProcessed((int64_t)num_bytes);
+}
+
+BENCHMARK(BlockParse_from_chars_ff)->Name("BlockParse/from_chars+fast_float");

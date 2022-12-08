@@ -32,3 +32,5 @@ The [plots](plots) directory contains a Jupyter notebook that can read the Googl
 * IO Streams are very slow, about 10x slower than a mechanical hard drive.
 * C routines like scanf are faster but still slow.
 * A fast approach includes using fast methods to identify fields then use fast field conversion methods to parse said fields.
+* The C++17 `std::from_chars` methods are great, though the float version still has [spotty compiler support](https://en.cppreference.com/w/cpp/compiler_support/17).
+* [fast_float](https://github.com/fastfloat/fast_float) is great if your compiler doesn't include a float version of `std::from_chars`.

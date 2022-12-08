@@ -18,6 +18,8 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 #include <sstream>
 #include <charconv>
 
+#include "fast_float/fast_float.h"
+
 #if FROM_CHARS_DOUBLE_SUPPORTED && defined(__cplusplus) && __cplusplus >= 201703L
 /**
  * Convert a single field from string to double.
@@ -28,7 +30,7 @@ static void DoubleFieldParse_from_chars(benchmark::State& state) {
     std::size_t num_bytes = 0;
     std::size_t num_fields = 0;
 
-    for (auto _ : state) {
+    for ([[maybe_unused]] auto _ : state) {
         for (const auto& field : kDoubleStrings) {
             double value = 0;
             std::from_chars_result result = std::from_chars(field.data(), field.data() + field.size(), value, std::chars_format::general);
@@ -41,12 +43,38 @@ static void DoubleFieldParse_from_chars(benchmark::State& state) {
         num_fields += kDoubleStrings.size();
     }
 
-    state.SetBytesProcessed(num_bytes);
-    state.counters["fields_converted_per_second"] = benchmark::Counter(num_fields, benchmark::Counter::kIsRate);
+    state.SetBytesProcessed((int64_t)num_bytes);
+    state.counters["fields_converted_per_second"] = benchmark::Counter((double)num_fields, benchmark::Counter::kIsRate);
 }
 
 BENCHMARK(DoubleFieldParse_from_chars)->Name("DoubleFieldParse/from_chars");
 #endif
+
+/**
+ * Convert a single field from string to double using the fast_float library.
+ */
+static void DoubleFieldParse_from_chars_ff(benchmark::State& state) {
+    std::size_t num_bytes = 0;
+    std::size_t num_fields = 0;
+
+    for ([[maybe_unused]] auto _ : state) {
+        for (const auto& field : kDoubleStrings) {
+            double value = 0;
+            fast_float::from_chars_result result = fast_float::from_chars(field.data(), field.data() + field.size(), value, fast_float::chars_format::general);
+            if (result.ec != std::errc()) {
+                break; // error testing
+            }
+            benchmark::DoNotOptimize(value);
+            num_bytes += field.size();
+        }
+        num_fields += kDoubleStrings.size();
+    }
+
+    state.SetBytesProcessed((int64_t)num_bytes);
+    state.counters["fields_converted_per_second"] = benchmark::Counter((double)num_fields, benchmark::Counter::kIsRate);
+}
+
+BENCHMARK(DoubleFieldParse_from_chars_ff)->Name("DoubleFieldParse/from_chars(fast_float)");
 
 /**
  * Convert a single field from string to double.

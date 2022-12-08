@@ -21,5 +21,3 @@ extern const std::array<std::string, 3> kLines;
 extern const std::array<std::string, 2> kIntStrings;
 extern const std::array<std::string, 3> kDoubleStrings;
 
-// The double version of std::from_chars is specified in C++17, but compiler support is still lacking.
-#define FROM_CHARS_DOUBLE_SUPPORTED false

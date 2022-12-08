@@ -20,7 +20,8 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 
 #include "fast_float/fast_float.h"
 
-#if FROM_CHARS_DOUBLE_SUPPORTED && defined(__cplusplus) && __cplusplus >= 201703L
+#if defined(__cplusplus) && __cplusplus >= 201703L
+#ifdef FROM_CHARS_DOUBLE_SUPPORTED
 /**
  * Convert a single field from string to double.
  *
@@ -48,6 +49,7 @@ static void DoubleFieldParse_from_chars(benchmark::State& state) {
 }
 
 BENCHMARK(DoubleFieldParse_from_chars)->Name("DoubleFieldParse/from_chars");
+#endif
 #endif
 
 /**

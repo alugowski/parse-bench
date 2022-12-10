@@ -12,13 +12,47 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 
 #include "parse_bench.h"
 
-#include <cstdio>
 #include <cstdlib>
 #include <cerrno>
 #include <charconv>
 #include <sstream>
 
+// <cstdio> does not include fmemopen which is needed for the scanf test
+#include <stdio.h> // NOLINT(modernize-deprecated-headers)
+
 #include "fast_float/fast_float.h"
+
+/**
+ * Parse a block using scanf
+ *
+ * The "default" C method.
+ */
+static void BlockParse_scanf(benchmark::State& state) {
+    std::size_t num_bytes = 0;
+
+    int64_t row, col;
+    double value;
+
+    // open the string as a FILE
+    FILE *chunk = fmemopen(const_cast<char *>(kLineBlock.c_str()), kLineBlock.size(), "r");
+
+    for ([[maybe_unused]] auto _ : state) {
+        rewind(chunk);
+        while (fscanf(chunk, "%lld %lld %lf\n", &row, &col, &value) == 3) { // NOLINT(cert-err34-c)
+            benchmark::DoNotOptimize(row);
+            benchmark::DoNotOptimize(col);
+            benchmark::DoNotOptimize(value);
+        }
+
+        num_bytes += kLineBlock.size();
+    }
+
+    fclose(chunk);
+
+    state.SetBytesProcessed((int64_t)num_bytes);
+}
+
+BENCHMARK(BlockParse_scanf)->Name("BlockParse/scanf");
 
 /**
  * Parse a block using istringstream

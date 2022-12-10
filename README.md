@@ -32,16 +32,19 @@ See [plots](plots/plot.ipynb) for a Jupyter notebook that reads the Google Bench
 ## Takeaways
 
 * Datafile parse performance is CPU bound due to parsing, not IO bound. By a lot.
-* IO Streams are very slow, about 5x slower than a mechanical hard drive, and get slower when parallelized.
-* C routines like scanf are faster sequentially, but still slow.
+* IO Streams are very slow, about 5x slower than a mechanical hard drive, and get slower when used in parallel.
 * A fast approach includes using fast methods to identify fields then use fast field conversion methods to parse said fields.
-* The C++17 `std::from_chars` methods are great. The float version has [spotty compiler support](https://en.cppreference.com/w/cpp/compiler_support/17), use [fast_float](https://github.com/fastfloat/fast_float).
+* C routines like `strtoll` and `strtod` are usable (sequentially only).
+* The C++17 `std::from_chars` methods are *fast*. The float version has [spotty compiler support](https://en.cppreference.com/w/cpp/compiler_support/17), use [fast_float](https://github.com/fastfloat/fast_float).
+* Avoid scanf. Slow, gets slower when used in parallel, poor error checking.
 * Parallelism: an efficient parallel parser can reach >1 GB/s speeds on a laptop.
-* Parallelism: standard library methods have internal locking that kills parallel performance (eg. `istringstream`, `strtod`)
+* Parallelism: standard library methods have internal locking that kills parallel performance (eg. `istringstream`, `strtod`, `scanf`)
 
 ## Parallelism
 
 CPU-bound operations have a natural path to speedup: parallelism. We include some parallel parsing here, with many simplifying (but realistic) assumptions to focus on speeding up parsing only.
+
+All parallel tests included here are embarassingly parallel. All threads have their own unique inputs and nothing is shared between threads (at least at the application level, see note below).
 
 Some methods that are good options for single-threaded use are either not thread safe or include internal synchronization that kills multithreaded performance.
 For example, using `strtod` in parallel is *slower* than single threaded, at least on some platforms. The problem appears to be locale support which requires locking. Some platforms like BSD and macOS include a `strtod_l` which can avoid this, but it is not portable.

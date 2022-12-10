@@ -13,10 +13,12 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 #ifdef ENABLE_OPENMP
 #include "parse_bench.h"
 
-#include <cstdio>
 #include <charconv>
 #include <sstream>
 #include <omp.h>
+
+// <cstdio> does not include fmemopen which is needed for the scanf test
+#include <stdio.h> // NOLINT(modernize-deprecated-headers)
 
 
 struct Chunk {
@@ -72,6 +74,33 @@ void ParseChunk_istringstream(const char* pos, size_t length) {
 }
 
 /**
+ * Parse a block using fscanf.
+ *
+ * Note that sscanf is a poor choice for parsing large in-memory strings. Implementations tend to want to reuse
+ * their internal vfscanf() implementation, so convert the string into a FILE object before hand. This can mean not only
+ * a copy but a strlen on every sscanf call. When parsing a large chunk, that means every line.
+ *
+ * Here we attempt to do that conversion once for the entire chunk and use fscanf.
+ *
+ * See https://stackoverflow.com/a/23924112
+ */
+void ParseChunk_fscanf(const char* pos, size_t length) {
+    int64_t row, col;
+    double value;
+
+    // open the string as a FILE object
+    FILE *chunk = fmemopen(const_cast<char *>(pos), length, "r");
+
+    while (fscanf(chunk, "%lld %lld %lf\n", &row, &col, &value) == 3) { // NOLINT(cert-err34-c)
+        benchmark::DoNotOptimize(row);
+        benchmark::DoNotOptimize(col);
+        benchmark::DoNotOptimize(value);
+    }
+
+    fclose(chunk);
+}
+
+/**
  * Parse a block in parallel.
  *
  * First benchmark argument determines the block parse implementation.
@@ -92,8 +121,18 @@ static void BlockParseParallel_multi(benchmark::State& state) {
     const int numThreads = (int)state.range(1);
     const int chunkSize = (int)state.range(2);
 
+    size_t target_bytes = 200u << 20u;
+    if (whichImpl == 3) {
+        // scanf is slow
+        target_bytes = 20u << 20u;
+    }
+    if (chunkSize > 8u << 20u && numThreads > 6) {
+        // use a larger problem to reduce uneven cpu/task counts
+        target_bytes = 400u << 20u;
+    }
+
     std::size_t num_bytes = 0;
-    const std::string kBigLineBlock = ConstructManyLines(200u << 20u);
+    const std::string kBigLineBlock = ConstructManyLines(target_bytes);
     omp_set_num_threads(numThreads);
 
     for ([[maybe_unused]] auto _ : state) {
@@ -122,6 +161,14 @@ static void BlockParseParallel_multi(benchmark::State& state) {
                     ParseChunk_istringstream(chunk.start, chunk.length);
                 }
                 break;
+
+            case 3: // sscanf
+#pragma omp parallel for default(none) shared(chunks)
+                for (auto chunk : chunks) {
+                    ParseChunk_fscanf(chunk.start, chunk.length);
+                }
+                break;
+
             default:
                 break;
         }
@@ -161,4 +208,15 @@ BENCHMARK(BlockParseParallel_multi)
                               {1, 2, 3, 4, 5, 6, 7, 8}, // number of threads
                               {1u << 20u} // chunk sizes
                       });
+
+BENCHMARK(BlockParseParallel_multi)
+        ->Name("BlockParseParallel/scanf")
+        ->UseRealTime()
+        ->ArgsProduct({
+                              {3}, // scanf version
+                              {1, 2, 3, 4, 5, 6, 7, 8}, // number of threads
+                              {1u << 20u} // chunk sizes
+                      });
+
+
 #endif // ENABLE_OPENMP

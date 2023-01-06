@@ -126,7 +126,7 @@ static void BlockParseParallel_multi(benchmark::State& state) {
         // scanf is slow
         target_bytes = 20u << 20u;
     }
-    if (chunkSize > 8u << 20u && numThreads > 6) {
+    if (chunkSize > (int)(8u << 20u) && numThreads > 6) {
         // use a larger problem to reduce uneven cpu/task counts
         target_bytes = 400u << 20u;
     }

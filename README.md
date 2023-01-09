@@ -57,14 +57,21 @@ Building and running the benchmarks is fully automated. Just run:
 ./run_all_benchmarks.sh
 ```
 
-Which will write benchmark output into the console and a JSON version to `plots/benchmark_outputs`. This will not overwrite anything.
+Which will write benchmark output to the console and a JSON version to `plots/benchmark_outputs/`. This will not overwrite anything.
 
-Then open the `plots/` directory in Jupyter and "Run All Cells" to see the plots with data from your system.
+Then open the [`plots/plot.ipynb`](plots/plot.ipynb) notebook in Jupyter and run all the cells to see the plots with data from your system.
+
+This will install and open Jupyter (in a virtual env) for you:
+```shell
+cd plots/
+./start_jupyter.sh
+```
+Then select "Cells" -> "Run All".
 
 ### macOS
 The version of clang bundled with macOS does not support OpenMP. Parallel benchmarks are disabled if OpenMP is not found.
 
-Install Homebrew's LLVM and this project's `run.sh` will pick it up.
+Install Homebrew's LLVM and this project's `cpp/run.sh` will pick it up.
 ```shell
 brew install llvm
 ```

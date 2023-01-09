@@ -1,0 +1,66 @@
+{
+  "context": {
+    "date": "2023-01-08T19:06:58-08:00",
+    "host_name": "notchie.local",
+    "executable": "bench_parse.py",
+    "num_cpus": 8,
+    "mhz_per_cpu": 24,
+    "cpu_scaling_enabled": false,
+    "caches": [
+      {
+        "type": "Data",
+        "level": 1,
+        "size": 65536,
+        "num_sharing": 0
+      },
+      {
+        "type": "Instruction",
+        "level": 1,
+        "size": 131072,
+        "num_sharing": 0
+      },
+      {
+        "type": "Unified",
+        "level": 2,
+        "size": 4194304,
+        "num_sharing": 1
+      }
+    ],
+    "load_avg": [4.5791,4.93701,5.11572],
+    "library_build_type": "release"
+  },
+  "benchmarks": [
+    {
+      "name": "IntFieldParse/cast",
+      "family_index": 0,
+      "per_family_instance_index": 0,
+      "run_name": "IntFieldParse/cast",
+      "run_type": "iteration",
+      "repetitions": 1,
+      "repetition_index": 0,
+      "threads": 1,
+      "iterations": 2365968,
+      "real_time": 2.9509738011635750e+02,
+      "cpu_time": 2.9436239205263973e+02,
+      "time_unit": "ns",
+      "bytes_per_second": 2.3780211701596096e+07,
+      "fields_converted_per_second": 6.7943462004560269e+06
+    },
+    {
+      "name": "DoubleFieldParse/cast",
+      "family_index": 1,
+      "per_family_instance_index": 0,
+      "run_name": "DoubleFieldParse/cast",
+      "run_type": "iteration",
+      "repetitions": 1,
+      "repetition_index": 0,
+      "threads": 1,
+      "iterations": 1917834,
+      "real_time": 3.6597473542738788e+02,
+      "cpu_time": 3.6503889283431209e+02,
+      "time_unit": "ns",
+      "bytes_per_second": 3.8352077750669912e+07,
+      "fields_converted_per_second": 8.2183023751435522e+06
+    }
+  ]
+}

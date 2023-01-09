@@ -20,6 +20,7 @@ const std::array<std::string, 3> kLines = {
     "1 2 3",
 };
 
+// keep in sync with python/bench_parse.py
 const std::array<std::string, 2> kIntStrings = {
     "123456",
     "1",

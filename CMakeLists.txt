@@ -2,8 +2,10 @@ cmake_minimum_required(VERSION 3.19)
 project(parse_bench VERSION 1.0.0)
 SET(CMAKE_CXX_STANDARD 20)
 
-set(CMAKE_CXX_FLAGS_DEBUG "-g -Wall -Wextra -pedantic")
-set(CMAKE_CXX_FLAGS_RELEASE "-g -O3 -DNDEBUG")
+if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang" OR "${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+    set(CMAKE_CXX_FLAGS_DEBUG "-g")
+    set(CMAKE_CXX_FLAGS_RELEASE "-g -O3 -DNDEBUG")
+endif()
 
 # Add Google Benchmark
 include(cmake/GoogleBenchmark.cmake)

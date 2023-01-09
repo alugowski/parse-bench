@@ -49,6 +49,18 @@ All parallel tests included here are embarassingly parallel. All threads have th
 Some methods that are good options for single-threaded use are either not thread safe or include internal synchronization that kills multithreaded performance.
 For example, using `strtod` in parallel is *slower* than single threaded, at least on some platforms. The problem appears to be locale support which requires locking. Some platforms like BSD and macOS include a `strtod_l` which can avoid this, but it is not portable.
 
+# Run on Your Own System
+
+Building and running the benchmarks is fully automated. Just run:
+
+```shell
+./run_all_benchmarks.sh
+```
+
+Which will print benchmark output into the console and a JSON version to `plots/benchmark_outputs`. This will not overwrite anything.
+
+Then just press the "Run All Cells" button in Jupyter to see the plots from your system.
+
 ### macOS
 The version of clang bundled with macOS does not support OpenMP. Parallel benchmarks are disabled if OpenMP is not found.
 

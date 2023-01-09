@@ -1,6 +1,6 @@
 {
   "context": {
-    "date": "2023-01-08T19:06:58-08:00",
+    "date": "2023-01-08T20:24:51-08:00",
     "host_name": "notchie.local",
     "executable": "bench_parse.py",
     "num_cpus": 8,
@@ -26,41 +26,41 @@
         "num_sharing": 1
       }
     ],
-    "load_avg": [4.5791,4.93701,5.11572],
+    "load_avg": [3.30518,6.26465,6.61426],
     "library_build_type": "release"
   },
   "benchmarks": [
     {
-      "name": "IntFieldParse/cast",
+      "name": "IntFieldParse/int()",
       "family_index": 0,
       "per_family_instance_index": 0,
-      "run_name": "IntFieldParse/cast",
+      "run_name": "IntFieldParse/int()",
       "run_type": "iteration",
       "repetitions": 1,
       "repetition_index": 0,
       "threads": 1,
-      "iterations": 2365968,
-      "real_time": 2.9509738011635750e+02,
-      "cpu_time": 2.9436239205263973e+02,
+      "iterations": 2394055,
+      "real_time": 2.9034450250027953e+02,
+      "cpu_time": 2.9002800687536416e+02,
       "time_unit": "ns",
-      "bytes_per_second": 2.3780211701596096e+07,
-      "fields_converted_per_second": 6.7943462004560269e+06
+      "bytes_per_second": 2.4135600128466770e+07,
+      "fields_converted_per_second": 6.8958857509905053e+06
     },
     {
-      "name": "DoubleFieldParse/cast",
+      "name": "DoubleFieldParse/float()",
       "family_index": 1,
       "per_family_instance_index": 0,
-      "run_name": "DoubleFieldParse/cast",
+      "run_name": "DoubleFieldParse/float()",
       "run_type": "iteration",
       "repetitions": 1,
       "repetition_index": 0,
       "threads": 1,
-      "iterations": 1917834,
-      "real_time": 3.6597473542738788e+02,
-      "cpu_time": 3.6503889283431209e+02,
+      "iterations": 1920170,
+      "real_time": 3.6043629387906969e+02,
+      "cpu_time": 3.5982230739986551e+02,
       "time_unit": "ns",
-      "bytes_per_second": 3.8352077750669912e+07,
-      "fields_converted_per_second": 8.2183023751435522e+06
+      "bytes_per_second": 3.8908093556417547e+07,
+      "fields_converted_per_second": 8.3374486192323305e+06
     }
   ]
 }

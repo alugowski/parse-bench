@@ -31,7 +31,7 @@ ints_bytes = sum([len(element) for element in ints])
 floats_bytes = sum([len(element) for element in floats])
 
 
-@benchmark.register(name="IntFieldParse/cast")
+@benchmark.register(name="IntFieldParse/int()")
 def parse_int(state):
     while state:
         # for i_str in ints:
@@ -43,7 +43,7 @@ def parse_int(state):
     state.counters["fields_converted_per_second"] = Counter(state.iterations*2, Counter.kIsRate)
 
 
-@benchmark.register(name="DoubleFieldParse/cast")
+@benchmark.register(name="DoubleFieldParse/float()")
 def parse_float(state):
     while state:
         # for f_str in floats:

@@ -38,7 +38,7 @@ See [plots](plots/plot.ipynb) for a Jupyter notebook that reads the Google Bench
 * The C++17 `std::from_chars` methods are *fast*. The float version has [spotty compiler support](https://en.cppreference.com/w/cpp/compiler_support/17), use [fast_float](https://github.com/fastfloat/fast_float).
 * Avoid scanf. Slow, gets slower when used in parallel, poor error checking.
 * Parallelism: an efficient parallel parser can reach >1 GB/s speeds on a laptop.
-* Parallelism: standard library methods have internal locking that kills parallel performance (eg. `istringstream`, `strtod`, `scanf`)
+* Parallelism: standard library methods lock internally (on the locale). This kills parallel performance. Examples: `istringstream`, `strtod`, `scanf`, etc.
 
 ## Parallelism
 
@@ -57,11 +57,16 @@ Building and running the benchmarks is fully automated. Just run:
 ./run_all_benchmarks.sh
 ```
 
-Which will print benchmark output into the console and a JSON version to `plots/benchmark_outputs`. This will not overwrite anything.
+Which will write benchmark output into the console and a JSON version to `plots/benchmark_outputs`. This will not overwrite anything.
 
-Then just press the "Run All Cells" button in Jupyter to see the plots from your system.
+Then open the `plots/` directory in Jupyter and "Run All Cells" to see the plots with data from your system.
 
 ### macOS
 The version of clang bundled with macOS does not support OpenMP. Parallel benchmarks are disabled if OpenMP is not found.
 
-You can try to install OpenMP with `brew install libomp` and that is sometimes enough. If not, install LLVM or GCC and use that instead. For example, `brew install llvm` then follow the instructions to use that compiler for this project.
+Install Homebrew's LLVM and this project's `run.sh` will pick it up.
+```shell
+brew install llvm
+```
+
+You can also try to install OpenMP with `brew install libomp`. That works sometimes. 

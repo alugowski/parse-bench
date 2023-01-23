@@ -1,8 +1,15 @@
 Benchmark different approaches to parsing scientific datafiles.
 
-## Parse Bench
+In particular focus on text datafiles dominated by integers and floating-point fields. For example, each line may be two integers and a float:
+```
+111 2222 3.333
+444 555 6E6
+```
 
-C++ IO Streams are often the go-to implementation choice. While easy to use and very featureful, iostream throughput is terrible.
+C++ IO Streams or `scanf` are often the go-to choice. While easy to use and very featureful, their throughput is low.
+Let's find something faster.
+
+## Parse Bench
 
 Benchmarks in this repo measure throughput of several approaches for each of several parsing steps to show the performance impact of each approach:
  * **Scan**: a simple iteration reading each byte. Shows the roofline performance supported by the memory subsystem.
@@ -18,25 +25,23 @@ Parsing methods do not attempt to cheat by skipping error checking (where possib
 
 ## Results
 
-The benchmarks are run using Google Benchmark. The default settings emit a table that shows throughput in bytes per second.
-
 The core result is bytes per second for each approach. That is the only figure shared by all the different steps, and the most useful figure to estimate how long a parser will take to parse a file.
-
-We use short and long fields to attempt to not cherry-pick easy or hard inputs. See [main.cpp](main.cpp) for what the input data looks like.
-
-See [plots](plots/plot.ipynb) for a Jupyter notebook that reads the Google Benchmark output and plots relevant results. The provided results were run on an M1 Macbook Pro.
 
 ![string to integer conversion](plots/string-to-integer.svg)
 ![string to double conversion](plots/string-to-double.svg)
 ![parallel parse scaling](plots/parallel-parse-scaling.svg)
+We use short and long strings to attempt to not cherry-pick easy or hard inputs. See [main.cpp](main.cpp) for what the input data looks like.
+
+See [plots](plots/plot.ipynb) for a Jupyter notebook that reads the Google Benchmark output and plots relevant results. The provided results were run on an M1 Macbook Pro.
+
 ## Takeaways
 
 * Datafile parse performance is CPU bound due to parsing, not IO bound. By a lot.
 * IO Streams are very slow, about 5x slower than a mechanical hard drive, and get slower when used in parallel.
-* A fast approach includes using fast methods to identify fields then use fast field conversion methods to parse said fields.
+* A fast approach uses fast methods to identify fields then use fast field conversion methods.
 * C routines like `strtoll` and `strtod` are usable (sequentially only).
 * The C++17 `std::from_chars` methods are *fast*. The float version has [spotty compiler support](https://en.cppreference.com/w/cpp/compiler_support/17), use [fast_float](https://github.com/fastfloat/fast_float).
-* Avoid scanf. Slow, gets slower when used in parallel, poor error checking.
+* Avoid `scanf`. Slow, gets slower when used in parallel, poor error checking.
 * Parallelism: an efficient parallel parser can reach >1 GB/s speeds on a laptop.
 * Parallelism: standard library methods lock internally (on the locale). This kills parallel performance. Examples: `istringstream`, `strtod`, `scanf`, etc.
 

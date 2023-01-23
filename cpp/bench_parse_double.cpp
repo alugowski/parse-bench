@@ -76,7 +76,7 @@ static void DoubleFieldParse_from_chars_ff(benchmark::State& state) {
     state.counters["fields_converted_per_second"] = benchmark::Counter((double)num_fields, benchmark::Counter::kIsRate);
 }
 
-BENCHMARK(DoubleFieldParse_from_chars_ff)->Name("DoubleFieldParse/from_chars(fast_float)");
+BENCHMARK(DoubleFieldParse_from_chars_ff)->Name("DoubleFieldParse/fast_float::from_chars");
 
 /**
  * Convert a single field from string to double.

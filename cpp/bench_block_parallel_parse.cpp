@@ -182,7 +182,7 @@ static void BlockParseParallel_multi(benchmark::State& state) {
 }
 
 BENCHMARK(BlockParseParallel_multi)
-        ->Name("BlockParseParallel/from_chars(fast_float)")
+        ->Name("BlockParseParallel/from_chars+fast_float")
         ->UseRealTime()
         ->ArgsProduct({
                               {0}, // from_chars(fast_float) version

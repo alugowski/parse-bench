@@ -54,18 +54,6 @@ def create_block():
 block = create_block()
 
 
-@benchmark.register(name="IntFieldParse/int()")
-def parse_int(state):
-    while state:
-        # for i_str in ints:
-        #     _ = int(i_str)
-        # unroll the loop to avoid timing loop code
-        _ = int("123456")
-        _ = int("1")
-    state.bytes_processed = state.iterations * sum([len(element) for element in ["123456", "1"]])
-    state.counters["fields_converted_per_second"] = Counter(state.iterations*2, Counter.kIsRate)
-
-
 @benchmark.register(name="IntFieldParse/[int()]")
 def parse_int_list_comprehension(state):
     while state:
@@ -80,20 +68,6 @@ def parse_int_numpy_loadtxt(state):
         _ = np.loadtxt(int_list, dtype=np.int64)
     state.bytes_processed = state.iterations * sum([len(element) for element in int_list])
     state.counters["fields_converted_per_second"] = Counter(state.iterations*len(int_list), Counter.kIsRate)
-
-
-@benchmark.register(name="DoubleFieldParse/float()")
-def parse_float(state):
-    while state:
-        # for f_str in floats:
-        #     _ = float(f_str)
-        # unroll the loop to avoid timing loop code
-        _ = float("123456")
-        _ = float("1")
-        _ = float("333.323")
-
-    state.bytes_processed = state.iterations * sum([len(element) for element in ["123456", "1", "333.323"]])
-    state.counters["fields_converted_per_second"] = Counter(state.iterations*3, Counter.kIsRate)
 
 
 @benchmark.register(name="DoubleFieldParse/[float()]")

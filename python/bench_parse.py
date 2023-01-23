@@ -23,6 +23,8 @@
 import google_benchmark as benchmark
 from google_benchmark import Counter
 
+import numpy as np
+
 # same strings as in the C++ benchmark (see main.cpp)
 ints = ["123456", "1"]
 floats = ["123456", "1", "333.323"]
@@ -55,6 +57,21 @@ def parse_int_list_comprehension(state):
     state.counters["fields_converted_per_second"] = Counter(state.iterations*list_elements, Counter.kIsRate)
 
 
+@benchmark.register(name="IntFieldParse/np.loadtxt")
+def parse_int_numpy_loadtxt(state):
+    str_list = ints
+    while len(str_list) < 1000:
+        str_list += str_list
+
+    list_elements = len(str_list)
+    list_bytes = sum([len(element) for element in str_list])
+
+    while state:
+        _ = np.loadtxt(str_list, dtype=np.int64)
+    state.bytes_processed = state.iterations * list_bytes
+    state.counters["fields_converted_per_second"] = Counter(state.iterations*list_elements, Counter.kIsRate)
+
+
 @benchmark.register(name="DoubleFieldParse/float()")
 def parse_float(state):
     while state:
@@ -69,7 +86,7 @@ def parse_float(state):
     state.counters["fields_converted_per_second"] = Counter(state.iterations*3, Counter.kIsRate)
 
 
-@benchmark.register(name="IntFieldParse/[float()]")
+@benchmark.register(name="DoubleFieldParse/[float()]")
 def parse_float_list_comprehension(state):
     str_list = floats
     while len(str_list) < 1000:
@@ -80,6 +97,21 @@ def parse_float_list_comprehension(state):
 
     while state:
         _ = [float(element) for element in str_list]
+    state.bytes_processed = state.iterations * list_bytes
+    state.counters["fields_converted_per_second"] = Counter(state.iterations*list_elements, Counter.kIsRate)
+
+
+@benchmark.register(name="DoubleFieldParse/np.loadtxt")
+def parse_float_numpy_loadtxt(state):
+    str_list = floats
+    while len(str_list) < 1000:
+        str_list += str_list
+
+    list_elements = len(str_list)
+    list_bytes = sum([len(element) for element in str_list])
+
+    while state:
+        _ = np.loadtxt(str_list, dtype=np.float64)
     state.bytes_processed = state.iterations * list_bytes
     state.counters["fields_converted_per_second"] = Counter(state.iterations*list_elements, Counter.kIsRate)
 

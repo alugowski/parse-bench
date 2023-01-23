@@ -20,6 +20,7 @@
 # See Python Google Benchmark examples:
 # https://github.com/google/benchmark/blob/main/bindings/python/google_benchmark/example.py
 
+from io import StringIO
 import google_benchmark as benchmark
 from google_benchmark import Counter
 
@@ -28,6 +29,29 @@ import numpy as np
 # same strings as in the C++ benchmark (see main.cpp)
 ints = ["123456", "1"]
 floats = ["123456", "1", "333.323"]
+lines = [
+    "123456 234567 333.323",
+    "1 234567 333.323",
+    "1 2 3",
+]
+
+int_list = ints
+while len(int_list) < 1000:
+    int_list += int_list
+
+float_list = floats
+while len(float_list) < 1000:
+    float_list += float_list
+
+
+def create_block():
+    str_list = lines
+    while len(str_list) < 100_000:
+        str_list += str_list
+    return "\n".join(str_list)
+
+
+block = create_block()
 
 
 @benchmark.register(name="IntFieldParse/int()")
@@ -44,32 +68,18 @@ def parse_int(state):
 
 @benchmark.register(name="IntFieldParse/[int()]")
 def parse_int_list_comprehension(state):
-    str_list = ints
-    while len(str_list) < 1000:
-        str_list += str_list
-
-    list_elements = len(str_list)
-    list_bytes = sum([len(element) for element in str_list])
-
     while state:
-        _ = [int(element) for element in str_list]
-    state.bytes_processed = state.iterations * list_bytes
-    state.counters["fields_converted_per_second"] = Counter(state.iterations*list_elements, Counter.kIsRate)
+        _ = [int(element) for element in int_list]
+    state.bytes_processed = state.iterations * sum([len(element) for element in int_list])
+    state.counters["fields_converted_per_second"] = Counter(state.iterations*len(int_list), Counter.kIsRate)
 
 
 @benchmark.register(name="IntFieldParse/np.loadtxt")
 def parse_int_numpy_loadtxt(state):
-    str_list = ints
-    while len(str_list) < 1000:
-        str_list += str_list
-
-    list_elements = len(str_list)
-    list_bytes = sum([len(element) for element in str_list])
-
     while state:
-        _ = np.loadtxt(str_list, dtype=np.int64)
-    state.bytes_processed = state.iterations * list_bytes
-    state.counters["fields_converted_per_second"] = Counter(state.iterations*list_elements, Counter.kIsRate)
+        _ = np.loadtxt(int_list, dtype=np.int64)
+    state.bytes_processed = state.iterations * sum([len(element) for element in int_list])
+    state.counters["fields_converted_per_second"] = Counter(state.iterations*len(int_list), Counter.kIsRate)
 
 
 @benchmark.register(name="DoubleFieldParse/float()")
@@ -88,32 +98,40 @@ def parse_float(state):
 
 @benchmark.register(name="DoubleFieldParse/[float()]")
 def parse_float_list_comprehension(state):
-    str_list = floats
-    while len(str_list) < 1000:
-        str_list += str_list
-
-    list_elements = len(str_list)
-    list_bytes = sum([len(element) for element in str_list])
-
     while state:
-        _ = [float(element) for element in str_list]
-    state.bytes_processed = state.iterations * list_bytes
-    state.counters["fields_converted_per_second"] = Counter(state.iterations*list_elements, Counter.kIsRate)
+        _ = [float(element) for element in float_list]
+    state.bytes_processed = state.iterations * sum([len(element) for element in float_list])
+    state.counters["fields_converted_per_second"] = Counter(state.iterations*len(float_list), Counter.kIsRate)
 
 
 @benchmark.register(name="DoubleFieldParse/np.loadtxt")
 def parse_float_numpy_loadtxt(state):
-    str_list = floats
-    while len(str_list) < 1000:
-        str_list += str_list
-
-    list_elements = len(str_list)
-    list_bytes = sum([len(element) for element in str_list])
-
     while state:
-        _ = np.loadtxt(str_list, dtype=np.float64)
-    state.bytes_processed = state.iterations * list_bytes
-    state.counters["fields_converted_per_second"] = Counter(state.iterations*list_elements, Counter.kIsRate)
+        _ = np.loadtxt(float_list, dtype=np.float64)
+    state.bytes_processed = state.iterations * sum([len(element) for element in float_list])
+    state.counters["fields_converted_per_second"] = Counter(state.iterations*len(float_list), Counter.kIsRate)
+
+
+@benchmark.register(name="SplitLines/readlines")
+def parse_splitlines_lines(state):
+    while state:
+        for _ in StringIO(block).readlines():
+            pass
+    state.bytes_processed = state.iterations * len(block)
+
+
+@benchmark.register(name="BlockParse/np.genfromtxt")
+def parse_block_numpy_genfromtxt(state):
+    while state:
+        _ = np.genfromtxt(StringIO(block), dtype=(np.int64, np.int64, np.float64))
+    state.bytes_processed = state.iterations * len(block)
+
+
+@benchmark.register(name="BlockParse/np.loadtxt")
+def parse_block_numpy_loadtxt(state):
+    while state:
+        _ = np.loadtxt(StringIO(block), dtype=np.float64)
+    state.bytes_processed = state.iterations * len(block)
 
 
 if __name__ == "__main__":

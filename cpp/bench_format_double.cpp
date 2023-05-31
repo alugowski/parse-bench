@@ -24,6 +24,38 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 #include <ryu/ryu.h>
 
 /**
+ * Convert a single field from double to string using std::to_chars.
+ */
+static void DoubleFieldFormat_to_chars_shortest(benchmark::State& state) {
+    std::size_t num_bytes = 0;
+    std::size_t num_fields = 0;
+
+    std::string field(1024, ' ');
+
+    errno = 0;
+    for ([[maybe_unused]] auto _ : state) {
+        for (const auto& d : kDoubles) {
+            std::to_chars_result result = std::to_chars(field.data(), field.data() + field.size(), d);
+
+            if (result.ec != std::errc()) {
+                break; // error testing
+            }
+
+            auto length = result.ptr - field.data();
+
+            benchmark::DoNotOptimize(field);
+            num_bytes += length;
+        }
+        num_fields += kDoubleStrings.size();
+    }
+
+    state.SetBytesProcessed((int64_t)num_bytes);
+    state.counters["fields_converted_per_second"] = benchmark::Counter((double)num_fields, benchmark::Counter::kIsRate);
+}
+
+BENCHMARK(DoubleFieldFormat_to_chars_shortest)->Name("DoubleFieldFormat/std::to_chars(shortest)" COMPILER);
+
+/**
  * Convert a single field from double string using the Google double-conversion library.
  */
 static void DoubleFieldFormat_double_conversion_ToShortest(benchmark::State& state) {

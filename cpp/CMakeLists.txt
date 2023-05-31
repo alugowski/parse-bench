@@ -25,25 +25,6 @@ include(cmake/dragonbox.cmake)
 # Add Ryu library
 include(cmake/ryu.cmake)
 
-# Test for float version of std::from_chars.
-# The method is specified in C++17, but compiler support is spotty.
-include(CheckSourceCompiles)
-check_source_compiles(CXX "
-#include <charconv>
-int main(void) {
-    double value = 0;
-    const char* ptr;
-    std::from_chars_result result = std::from_chars(ptr, ptr, value, std::chars_format::general);
-    return 0;
-}
-" float_from_chars_supported)
-if (float_from_chars_supported)
-    add_definitions(-DFROM_CHARS_DOUBLE_SUPPORTED)
-else()
-    message("Float version of std::from_chars not detected. Omitting its test.")
-endif()
-
-
 # benchmark string parsing implementations
 add_executable(parse-bench
         bench_stream.cpp
@@ -68,6 +49,25 @@ target_link_libraries(parse-bench
 set(COMPILER_STR "${CMAKE_CXX_COMPILER_ID} ${CMAKE_CXX_COMPILER_VERSION}")
 message("Compiler: ${COMPILER_STR}")
 target_compile_definitions(parse-bench PUBLIC COMPILER_STR="${COMPILER_STR}")
+
+# Test for float versions of std::from_chars and std::to_chars.
+# These methods is specified in C++17, but compiler support is only recently catching up.
+include(cmake/from_chars_tests.cmake)
+include(cmake/to_chars_tests.cmake)
+
+if (from_chars_double_supported)
+    message("Double version of std::from_chars detected.")
+    target_compile_definitions(parse-bench PUBLIC FROM_CHARS_DOUBLE_SUPPORTED)
+else()
+    message("Double version of std::from_chars not detected. Omitting its test.")
+endif()
+
+if (to_chars_double_supported)
+    message("Double version of std::to_chars detected.")
+    target_compile_definitions(parse-bench PUBLIC TO_CHARS_DOUBLE_SUPPORTED)
+else()
+    message("Double version of std::to_chars not detected. Omitting its test.")
+endif()
 
 # enable OpenMP
 find_package(OpenMP)

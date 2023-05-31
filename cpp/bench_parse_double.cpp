@@ -51,7 +51,7 @@ static void DoubleFieldParse_from_chars(benchmark::State& state) {
     state.counters["fields_converted_per_second"] = benchmark::Counter((double)num_fields, benchmark::Counter::kIsRate);
 }
 
-BENCHMARK(DoubleFieldParse_from_chars)->Name("DoubleFieldParse/from_chars");
+BENCHMARK(DoubleFieldParse_from_chars)->Name("DoubleFieldParse/from_chars" COMPILER);
 #endif
 #endif
 

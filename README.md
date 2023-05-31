@@ -32,6 +32,7 @@ The core result is bytes per second for each approach. That is the only figure s
 ![parallel parse scaling](plots/parallel-parse-scaling.svg)
 
 Formatting:
+
 ![double_to_string conversion](plots/double-to-string.svg)
 
 We use short and long strings to attempt to not cherry-pick easy or hard inputs. See [main.cpp](main.cpp) for what the input data looks like.

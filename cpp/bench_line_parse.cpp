@@ -118,7 +118,7 @@ static void LineParse_strtoll_strtod(benchmark::State& state) {
     state.counters["lines_parsed_per_second"] = benchmark::Counter((double)num_lines, benchmark::Counter::kIsRate);
 }
 
-BENCHMARK(LineParse_strtoll_strtod)->Name("LineParse/strtoll+strtod");
+BENCHMARK(LineParse_strtoll_strtod)->Name("LineParse/strtoll+strtod" COMPILER);
 
 /**
  * Parse line using from_chars for ints and strtod for doubles.

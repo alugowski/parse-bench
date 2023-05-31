@@ -43,7 +43,7 @@ static void IntFieldParse_from_chars(benchmark::State& state) {
     state.counters["fields_converted_per_second"] = benchmark::Counter((double)num_fields, benchmark::Counter::kIsRate);
 }
 
-BENCHMARK(IntFieldParse_from_chars)->Name("IntFieldParse/std::from_chars");
+BENCHMARK(IntFieldParse_from_chars)->Name("IntFieldParse/std::from_chars" COMPILER);
 #endif
 
 /**

@@ -164,7 +164,7 @@ static void DoubleFieldParse_strtod(benchmark::State& state) {
     state.counters["fields_converted_per_second"] = benchmark::Counter((double)num_fields, benchmark::Counter::kIsRate);
 }
 
-BENCHMARK(DoubleFieldParse_strtod)->Name("DoubleFieldParse/strtod");
+BENCHMARK(DoubleFieldParse_strtod)->Name("DoubleFieldParse/strtod" COMPILER);
 
 /**
  * Convert a single field from string to double using sscanf.

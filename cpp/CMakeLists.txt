@@ -64,6 +64,11 @@ target_link_libraries(parse-bench
         dragonbox::dragonbox_to_chars
         ryu::ryu)
 
+# find compiler identification string
+set(COMPILER_STR "${CMAKE_CXX_COMPILER_ID} ${CMAKE_CXX_COMPILER_VERSION}")
+message("Compiler: ${COMPILER_STR}")
+target_compile_definitions(parse-bench PUBLIC COMPILER_STR="${COMPILER_STR}")
+
 # enable OpenMP
 find_package(OpenMP)
 if(OpenMP_CXX_FOUND)

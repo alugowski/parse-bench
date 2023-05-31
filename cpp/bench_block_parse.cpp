@@ -144,7 +144,7 @@ static void BlockParse_from_chars_strtod(benchmark::State& state) {
     state.SetBytesProcessed((int64_t)num_bytes);
 }
 
-BENCHMARK(BlockParse_from_chars_strtod)->Name("BlockParse/from_chars+strtod");
+BENCHMARK(BlockParse_from_chars_strtod)->Name("BlockParse/from_chars+strtod" COMPILER);
 
 /**
  * Parse a block using from_chars. Parse floats using the fast_float version of from_chars for compiler compatibility.

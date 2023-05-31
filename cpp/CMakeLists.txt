@@ -13,6 +13,18 @@ include(cmake/GoogleBenchmark.cmake)
 # Add fast_float library
 include(cmake/fast_float.cmake)
 
+# Add Google double-conversion library
+include(cmake/double_conversion.cmake)
+
+# Add Cpp Alliance's charconv library
+include(cmake/cppalliance_charconv.cmake)
+
+# Add Dragonbox floating-point formatting library
+include(cmake/dragonbox.cmake)
+
+# Add Ryu library
+include(cmake/ryu.cmake)
+
 # Test for float version of std::from_chars.
 # The method is specified in C++17, but compiler support is spotty.
 include(CheckSourceCompiles)
@@ -33,8 +45,24 @@ endif()
 
 
 # benchmark string parsing implementations
-add_executable(parse-bench bench_stream.cpp bench_splitlines.cpp bench_line_tokenize.cpp bench_parse_int.cpp bench_parse_double.cpp bench_line_parse.cpp bench_block_parse.cpp bench_block_parallel_parse.cpp main.cpp)
-target_link_libraries(parse-bench benchmark::benchmark fast_float)
+add_executable(parse-bench
+        bench_stream.cpp
+        bench_splitlines.cpp
+        bench_line_tokenize.cpp
+        bench_parse_int.cpp
+        bench_parse_double.cpp
+        bench_format_double.cpp
+        bench_line_parse.cpp
+        bench_block_parse.cpp
+        bench_block_parallel_parse.cpp
+        main.cpp)
+target_link_libraries(parse-bench
+        benchmark::benchmark
+        fast_float
+        double-conversion
+        Boost::charconv
+        dragonbox::dragonbox_to_chars
+        ryu::ryu)
 
 # enable OpenMP
 find_package(OpenMP)

@@ -15,10 +15,13 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 #include <cstdio>
 #include <cstdlib>
 #include <cerrno>
+#include <limits>
 #include <sstream>
 #include <charconv>
 
 #include "fast_float/fast_float.h"
+#include "double-conversion/double-conversion.h"
+#include <boost/charconv.hpp>
 
 #if defined(__cplusplus) && __cplusplus >= 201703L
 #ifdef FROM_CHARS_DOUBLE_SUPPORTED
@@ -77,6 +80,65 @@ static void DoubleFieldParse_from_chars_ff(benchmark::State& state) {
 }
 
 BENCHMARK(DoubleFieldParse_from_chars_ff)->Name("DoubleFieldParse/fast_float::from_chars");
+
+
+/**
+ * Convert a single field from string to double using the Google double-conversion library.
+ */
+static void DoubleFieldParse_double_conversion(benchmark::State& state) {
+    std::size_t num_bytes = 0;
+    std::size_t num_fields = 0;
+
+    double_conversion::StringToDoubleConverter converter(double_conversion::StringToDoubleConverter::ALLOW_CASE_INSENSITIVITY, 0, std::numeric_limits<double>::quiet_NaN(), "inf", "nan");
+
+    for ([[maybe_unused]] auto _ : state) {
+        for (const auto& field : kDoubleStrings) {
+            double value = 0;
+            int processed_char_count;
+            value = converter.StringToDouble(field.data(), (int)field.size(), &processed_char_count);
+            if (processed_char_count == 0) {
+                break; // error testing
+            }
+            benchmark::DoNotOptimize(value);
+            num_bytes += field.size();
+        }
+        num_fields += kDoubleStrings.size();
+    }
+
+    state.SetBytesProcessed((int64_t)num_bytes);
+    state.counters["fields_converted_per_second"] = benchmark::Counter((double)num_fields, benchmark::Counter::kIsRate);
+}
+
+BENCHMARK(DoubleFieldParse_double_conversion)->Name("DoubleFieldParse/double-conversion");
+
+/**
+ * Convert a single field from string to double using the CppAlliance charconv library.
+ */
+static void DoubleFieldParse_CppAlCharconv(benchmark::State& state) {
+    std::size_t num_bytes = 0;
+    std::size_t num_fields = 0;
+
+    double_conversion::StringToDoubleConverter converter(double_conversion::StringToDoubleConverter::ALLOW_CASE_INSENSITIVITY, 0, std::numeric_limits<double>::quiet_NaN(), "inf", "nan");
+
+    for ([[maybe_unused]] auto _ : state) {
+        for (const auto& field : kDoubleStrings) {
+            double value = 0;
+            boost::charconv::from_chars_result result = boost::charconv::from_chars(field.data(), field.data() + field.size(), value);
+            if (result.ec != std::errc()) {
+                break; // error testing
+            }
+            benchmark::DoNotOptimize(value);
+            num_bytes += field.size();
+        }
+        num_fields += kDoubleStrings.size();
+    }
+
+    state.SetBytesProcessed((int64_t)num_bytes);
+    state.counters["fields_converted_per_second"] = benchmark::Counter((double)num_fields, benchmark::Counter::kIsRate);
+}
+
+BENCHMARK(DoubleFieldParse_CppAlCharconv)->Name("DoubleFieldParse/CppAlliance-charconv");
+
 
 /**
  * Convert a single field from string to double.

@@ -32,6 +32,12 @@ const std::array<std::string, 3> kDoubleStrings = {
     "333.323",
 };
 
+const std::array<double, 3> kDoubles = {
+    123456,
+    1,
+    333.323,
+};
+
 /**
  * Constructs a large string block composed of repeated lines from kLines.
  *

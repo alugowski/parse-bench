@@ -21,6 +21,8 @@ extern const std::array<std::string, 3> kLines;
 extern const std::array<std::string, 2> kIntStrings;
 extern const std::array<std::string, 3> kDoubleStrings;
 
+extern const std::array<double, 3> kDoubles;
+
 std::string ConstructManyLines(std::size_t byte_target);
 
 void ParseChunk_from_chars_strtod(const char* pos, size_t length);

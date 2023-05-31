@@ -30,6 +30,10 @@ The core result is bytes per second for each approach. That is the only figure s
 ![string to integer conversion](plots/string-to-integer.svg)
 ![string to double conversion](plots/string-to-double.svg)
 ![parallel parse scaling](plots/parallel-parse-scaling.svg)
+
+Formatting:
+![double_to_string conversion](plots/double-to-string.svg)
+
 We use short and long strings to attempt to not cherry-pick easy or hard inputs. See [main.cpp](main.cpp) for what the input data looks like.
 
 See [plots](plots/plot.ipynb) for a Jupyter notebook that reads the Google Benchmark output and plots relevant results. The provided results were run on an M1 Macbook Pro.

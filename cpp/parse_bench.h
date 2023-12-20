@@ -27,6 +27,7 @@ std::string ConstructManyLines(std::size_t byte_target);
 
 void ParseChunk_from_chars_strtod(const char* pos, size_t length);
 void ParseChunk_from_chars_ff(const char* pos, size_t length);
+void ParseChunk_ff_ff(const char* pos, size_t length);
 
 #ifdef COMPILER_STR
 #define COMPILER " (" COMPILER_STR ")"

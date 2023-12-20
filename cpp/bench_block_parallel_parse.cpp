@@ -169,6 +169,13 @@ static void BlockParseParallel_multi(benchmark::State& state) {
                 }
                 break;
 
+            case 4: // fast_float with fast_float
+#pragma omp parallel for default(none) shared(chunks)
+                for (auto chunk : chunks) {
+                    ParseChunk_ff_ff(chunk.start, chunk.length);
+                }
+                break;
+
             default:
                 break;
         }
@@ -180,6 +187,16 @@ static void BlockParseParallel_multi(benchmark::State& state) {
     state.counters["p"] = benchmark::Counter((double)numThreads);
     state.counters["chunk_size"] = benchmark::Counter((double)chunkSize, benchmark::Counter::kDefaults, benchmark::Counter::kIs1024);
 }
+
+BENCHMARK(BlockParseParallel_multi)
+        ->Name("BlockParseParallel/fast_float+fast_float")
+        ->UseRealTime()
+        ->ArgsProduct({
+                              {4}, // fast_float (both ints and floats) version
+                              {1, 2, 3, 4, 5, 6, 7, 8}, // number of threads
+                              {1u << 10u, 1u << 20u, 10u << 20u} // chunk sizes
+                      });
+
 
 BENCHMARK(BlockParseParallel_multi)
         ->Name("BlockParseParallel/from_chars+fast_float")

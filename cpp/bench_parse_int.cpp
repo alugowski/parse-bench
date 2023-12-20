@@ -18,9 +18,37 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 #include <sstream>
 #include <charconv>
 
-#if defined(__cplusplus) && __cplusplus >= 201703L
+#include "fast_float/fast_float.h"
+
 /**
- * Convert a single field from string to int.
+ * Convert a single field from string to int using fast_float::from_chars.
+ */
+static void IntFieldParse_fast_float(benchmark::State& state) {
+    std::size_t num_bytes = 0;
+    std::size_t num_fields = 0;
+
+    for ([[maybe_unused]] auto _ : state) {
+        for (const auto& field : kIntStrings) {
+            int64_t value;
+            fast_float::from_chars_result result = fast_float::from_chars(field.data(), field.data() + field.size(), value);
+            if (result.ec != std::errc()) {
+                break; // error testing
+            }
+            benchmark::DoNotOptimize(value);
+            num_bytes += field.size();
+        }
+        num_fields += kIntStrings.size();
+    }
+
+    state.SetBytesProcessed((int64_t)num_bytes);
+    state.counters["fields_converted_per_second"] = benchmark::Counter((double)num_fields, benchmark::Counter::kIsRate);
+}
+
+BENCHMARK(IntFieldParse_fast_float)->Name("IntFieldParse/fast_float::from_chars");
+
+#if __cplusplus >= 201703L || (defined(_MSVC_LANG) && _MSVC_LANG >= 201703L)
+/**
+ * Convert a single field from string to int using std::from_chars.
  */
 static void IntFieldParse_from_chars(benchmark::State& state) {
     std::size_t num_bytes = 0;

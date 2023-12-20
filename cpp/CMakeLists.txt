@@ -44,6 +44,7 @@ target_link_libraries(parse-bench
         Boost::charconv
         dragonbox::dragonbox_to_chars
         ryu::ryu)
+target_compile_features(parse-bench PUBLIC cxx_std_20)
 
 # find compiler identification string
 set(COMPILER_STR "${CMAKE_CXX_COMPILER_ID} ${CMAKE_CXX_COMPILER_VERSION}")

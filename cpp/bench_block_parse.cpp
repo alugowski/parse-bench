@@ -205,3 +205,63 @@ static void BlockParse_from_chars_ff(benchmark::State& state) {
 }
 
 BENCHMARK(BlockParse_from_chars_ff)->Name("BlockParse/from_chars+fast_float");
+
+/**
+ * Parse a block using fast_float for both ints and floats.
+ */
+void ParseChunk_ff_ff(const char* pos, size_t length) {
+    int64_t row, col;
+    double value;
+
+    const char* end = pos + length;
+
+    while (pos != end && pos != nullptr) {
+
+        fast_float::from_chars_result row_result = fast_float::from_chars(pos, end, row);
+        if (row_result.ec != std::errc()) {
+            break; // error testing
+        }
+
+        const char* col_start = row_result.ptr + std::strspn(row_result.ptr, " "); // skip separator
+
+        fast_float::from_chars_result col_result = fast_float::from_chars(col_start, end, col);
+        if (col_result.ec != std::errc()) {
+            break; // error testing
+        }
+
+        const char* val_start = col_result.ptr + std::strspn(col_result.ptr, " "); // skip separator
+
+        fast_float::from_chars_result val_result = fast_float::from_chars(val_start, end, value, fast_float::chars_format::general);
+        if (val_result.ec != std::errc()) {
+            break; // error testing
+        }
+
+        // find the newline
+        pos = std::strchr(val_result.ptr, '\n');
+
+        // bump to start of next line
+        if (pos != end) {
+            pos++;
+        }
+
+        benchmark::DoNotOptimize(row);
+        benchmark::DoNotOptimize(col);
+        benchmark::DoNotOptimize(value);
+    }
+}
+
+/**
+ * Benchmark parsing a block using from_chars.
+ */
+static void BlockParse_ff_ff(benchmark::State& state) {
+    std::size_t num_bytes = 0;
+
+    for ([[maybe_unused]] auto _ : state) {
+        ParseChunk_ff_ff(kLineBlock.c_str(), kLineBlock.size());
+        num_bytes += kLineBlock.size();
+    }
+
+    state.SetBytesProcessed((int64_t)num_bytes);
+}
+
+BENCHMARK(BlockParse_ff_ff)->Name("BlockParse/fast_float+fast_float");

@@ -12,7 +12,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 
 #include "parse_bench.h"
 
-#include <cstdio>
+#include <cstring>
 #include <cstdlib>
 #include <cerrno>
 #include <sstream>
